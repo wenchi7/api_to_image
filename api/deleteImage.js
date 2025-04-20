@@ -8,9 +8,9 @@ const router = express.Router()
 router.use(cors())
 
 cloudinary.config({
-  cloud_name: 'dvzkvj8cs',
-  api_key: '955368792789983',
-  api_secret: 'JATRnGqZEErfAqf96U0WMI2lXAg',
+  cloud_name:  import.meta.env.VUE_APP_CLOUDINARY_CLOUD_NAME,
+  api_key: import.meta.env.VUE_APP_CLOUDINARY_API_KEY,
+  api_secret: import.meta.env.VUE_APP_CLOUDINARY_API_SECRET,
 })
 
 // 测试路由

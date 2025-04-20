@@ -1,5 +1,6 @@
 {
   "name": "cloudinary-api",
+  "type": "module",
   "version": "1.0.0",
   "main": "deleteImage.js",
   "scripts": {
