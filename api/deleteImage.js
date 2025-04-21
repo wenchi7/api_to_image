@@ -71,12 +71,16 @@
 
 // export default router
 import cloudinary from 'cloudinary'
+const { publicId, api_key } req.query
 
+if (!api_key || api_key !== process.env.CLOUDINARY_API_KEY) {
+  return res.status(401).json({ message: 'Unauthorized: Invalid API Key' });
+}
 // Cloudinary 設定（請改用 process.env）
 cloudinary.config({
-  cloud_name: process.env.VITE_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.VITE_CLOUDINARY_API_KEY,
-  api_secret: process.env.VITE_CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: api_key,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
 export default async function handler(req, res) {
