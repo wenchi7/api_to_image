@@ -70,80 +70,42 @@
 // })
 
 // export default router
-
-import express from 'express'
 import cloudinary from 'cloudinary'
-import cors from 'cors'
 
-const router = express.Router()
-
-// 啟用 CORS 並指定允許的來源
-router.use(cors({
-  origin: 'https://your-frontend-domain.com', // 替換成你的前端應用的域名
-  methods: ['GET', 'POST', 'DELETE'],
-}))
-
-// Cloudinary 配置
+// Cloudinary 設定（請改用 process.env）
 cloudinary.config({
-  cloud_name: import.meta.env.VUE_APP_CLOUDINARY_CLOUD_NAME,
-  api_key: import.meta.env.VUE_APP_CLOUDINARY_API_KEY,
-  api_secret: import.meta.env.VUE_APP_CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
-// 測試路由
-router.get('/test', (req, res) => {
-  res.json({ message: 'Cloudinary 刪除服務正在運行' })
-})
-
-// 處理刪除圖片的路由
-router.delete('/images/:publicId', async (req, res) => {
-  const { publicId } = req.params
-  console.log('收到刪除請求，publicId:', publicId)
-
-  if (!publicId) {
-    console.error('缺少 publicId')
-    return res.status(400).json({ message: '缺少 publicId 參數' })
+export default async function handler(req, res) {
+  // 處理預檢請求
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'DELETE, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    return res.status(200).end()
   }
 
-  try {
-    // 檢查圖片是否存在
-    console.log('正在檢查圖片是否存在...')
-    const result = await cloudinary.api.resource(publicId)
-    console.log('圖片存在:', result)
+  // 處理 DELETE 請求
+  if (req.method === 'DELETE') {
+    const { publicId } = req.query
 
-    // 刪除圖片
-    console.log('正在刪除圖片...')
-    const deleteResult = await cloudinary.uploader.destroy(publicId)
-    console.log('刪除結果:', deleteResult)
+    if (!publicId) {
+      return res.status(400).json({ message: '缺少 publicId' })
+    }
 
-    res.status(200).json({
-      message: '圖片已刪除',
-      result: deleteResult,
-    })
-  } catch (error) {
-    console.error('Cloudinary 操作錯誤:', {
-      message: error.message,
-      code: error.code,
-      http_code: error.http_code,
-      publicId: publicId,
-      stack: error.stack,
-    })
-
-    if (error.http_code === 404) {
-      res.status(404).json({
-        message: '找不到指定的圖片',
-        error: error.message,
-      })
-    } else {
-      res.status(500).json({
-        message: '伺服器錯誤',
-        error: error.message,
-        details: error.stack,
-      })
+    try {
+      const result = await cloudinary.uploader.destroy(publicId)
+      return res.status(200).json({ message: '圖片已刪除', result })
+    } catch (error) {
+      console.error('Cloudinary 刪除錯誤:', error)
+      return res.status(500).json({ message: '伺服器錯誤', error: error.message })
     }
   }
-})
 
-router.options('*', cors()) // 處理 OPTIONS 請求
-
-export default router
+  // 不支援的方法
+  res.setHeader('Allow', ['DELETE', 'OPTIONS'])
+  res.status(405).end(`Method ${req.method} Not Allowed`)
+}
